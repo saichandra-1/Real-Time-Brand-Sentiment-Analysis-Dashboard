@@ -257,56 +257,134 @@ def main():
         st.subheader("📈 Sentiment Trends & Analysis")
         
         # Sentiment Over Time
-        date_cols = [col for col in combined_df.columns if 'date' in col.lower() or 'time' in col.lower()]
+        date_cols = [col for col in combined_df.columns if 'date' in col.lower() or 'created' in col.lower()]
         if date_cols:
             try:
                 combined_df['date_parsed'] = pd.to_datetime(combined_df[date_cols[0]], errors='coerce')
                 trend_df = combined_df.dropna(subset=['date_parsed']).copy()
-                trend_df['date'] = trend_df['date_parsed'].dt.date
                 
-                # Daily sentiment counts
-                daily_sentiment = trend_df.groupby(['date', 'sentiment']).size().unstack(fill_value=0)
-                
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(x=daily_sentiment.index, y=daily_sentiment.get('POSITIVE', []), 
-                                        mode='lines+markers', name='Positive', 
-                                        line=dict(color='#2ecc71', width=3),
-                                        marker=dict(size=8)))
-                fig.add_trace(go.Scatter(x=daily_sentiment.index, y=daily_sentiment.get('NEGATIVE', []), 
-                                        mode='lines+markers', name='Negative',
-                                        line=dict(color='#e74c3c', width=3),
-                                        marker=dict(size=8)))
-                fig.add_trace(go.Scatter(x=daily_sentiment.index, y=daily_sentiment.get('NEUTRAL', []), 
-                                        mode='lines+markers', name='Neutral',
-                                        line=dict(color='#95a5a6', width=3),
-                                        marker=dict(size=8)))
-                
-                fig.update_layout(title="Sentiment Trends Over Time", 
-                                 xaxis_title="Date", yaxis_title="Number of Reviews",
-                                 hovermode='x unified', height=400)
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Sentiment percentage over time
-                daily_pct = trend_df.groupby(['date', 'sentiment']).size().unstack(fill_value=0)
-                daily_pct = daily_pct.div(daily_pct.sum(axis=1), axis=0) * 100
-                
-                fig2 = go.Figure()
-                fig2.add_trace(go.Bar(x=daily_pct.index, y=daily_pct.get('POSITIVE', []), 
-                                     name='Positive', marker_color='#2ecc71'))
-                fig2.add_trace(go.Bar(x=daily_pct.index, y=daily_pct.get('NEGATIVE', []), 
-                                     name='Negative', marker_color='#e74c3c'))
-                fig2.add_trace(go.Bar(x=daily_pct.index, y=daily_pct.get('NEUTRAL', []), 
-                                     name='Neutral', marker_color='#95a5a6'))
-                
-                fig2.update_layout(title="Sentiment Distribution Over Time (%)", 
-                                  xaxis_title="Date", yaxis_title="Percentage",
-                                  barmode='stack', height=400)
-                st.plotly_chart(fig2, use_container_width=True)
-                
+                if len(trend_df) > 0:
+                    trend_df['date'] = trend_df['date_parsed'].dt.date
+                    
+                    # Daily sentiment counts
+                    daily_sentiment = trend_df.groupby(['date', 'sentiment']).size().unstack(fill_value=0)
+                    
+                    # Only show if we have multiple dates
+                    if len(daily_sentiment) > 1:
+                        fig = go.Figure()
+                        
+                        if 'POSITIVE' in daily_sentiment.columns:
+                            fig.add_trace(go.Scatter(
+                                x=daily_sentiment.index, 
+                                y=daily_sentiment['POSITIVE'], 
+                                mode='lines+markers', 
+                                name='Positive', 
+                                line=dict(color='#2ecc71', width=3),
+                                marker=dict(size=10, symbol='circle'),
+                                fill='tozeroy',
+                                fillcolor='rgba(46, 204, 113, 0.1)'
+                            ))
+                        
+                        if 'NEGATIVE' in daily_sentiment.columns:
+                            fig.add_trace(go.Scatter(
+                                x=daily_sentiment.index, 
+                                y=daily_sentiment['NEGATIVE'], 
+                                mode='lines+markers', 
+                                name='Negative',
+                                line=dict(color='#e74c3c', width=3),
+                                marker=dict(size=10, symbol='circle'),
+                                fill='tozeroy',
+                                fillcolor='rgba(231, 76, 60, 0.1)'
+                            ))
+                        
+                        if 'NEUTRAL' in daily_sentiment.columns:
+                            fig.add_trace(go.Scatter(
+                                x=daily_sentiment.index, 
+                                y=daily_sentiment['NEUTRAL'], 
+                                mode='lines+markers', 
+                                name='Neutral',
+                                line=dict(color='#95a5a6', width=3),
+                                marker=dict(size=10, symbol='circle'),
+                                fill='tozeroy',
+                                fillcolor='rgba(149, 165, 166, 0.1)'
+                            ))
+                        
+                        fig.update_layout(
+                            title="Sentiment Trends Over Time", 
+                            xaxis_title="Date", 
+                            yaxis_title="Number of Reviews",
+                            hovermode='x unified', 
+                            height=450,
+                            showlegend=True,
+                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Sentiment percentage over time
+                        daily_pct = daily_sentiment.div(daily_sentiment.sum(axis=1), axis=0) * 100
+                        
+                        fig2 = go.Figure()
+                        
+                        if 'POSITIVE' in daily_pct.columns:
+                            fig2.add_trace(go.Bar(
+                                x=daily_pct.index, 
+                                y=daily_pct['POSITIVE'], 
+                                name='Positive', 
+                                marker_color='#2ecc71',
+                                text=daily_pct['POSITIVE'].round(1),
+                                texttemplate='%{text}%',
+                                textposition='inside'
+                            ))
+                        
+                        if 'NEGATIVE' in daily_pct.columns:
+                            fig2.add_trace(go.Bar(
+                                x=daily_pct.index, 
+                                y=daily_pct['NEGATIVE'], 
+                                name='Negative', 
+                                marker_color='#e74c3c',
+                                text=daily_pct['NEGATIVE'].round(1),
+                                texttemplate='%{text}%',
+                                textposition='inside'
+                            ))
+                        
+                        if 'NEUTRAL' in daily_pct.columns:
+                            fig2.add_trace(go.Bar(
+                                x=daily_pct.index, 
+                                y=daily_pct['NEUTRAL'], 
+                                name='Neutral', 
+                                marker_color='#95a5a6',
+                                text=daily_pct['NEUTRAL'].round(1),
+                                texttemplate='%{text}%',
+                                textposition='inside'
+                            ))
+                        
+                        fig2.update_layout(
+                            title="Sentiment Distribution Over Time (%)", 
+                            xaxis_title="Date", 
+                            yaxis_title="Percentage",
+                            barmode='stack', 
+                            height=450,
+                            showlegend=True,
+                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                        )
+                        st.plotly_chart(fig2, use_container_width=True)
+                    else:
+                        st.info("📊 Need data from multiple dates for trend analysis. Showing overall metrics.")
+                        col1, col2, col3 = st.columns(3)
+                        col1.metric("Positive", f"{positive_pct:.1f}%")
+                        col2.metric("Negative", f"{negative_pct:.1f}%")
+                        col3.metric("Neutral", f"{neutral_pct:.1f}%")
+                else:
+                    st.info("📊 No valid date information for trend analysis.")
+                    
             except Exception as e:
-                st.warning("📊 Unable to generate time-based trends. Showing overall distribution.")
+                st.warning(f"📊 Unable to generate time-based trends: {str(e)}")
         else:
-            st.info("📊 No date information available for trend analysis. Showing overall metrics.")
+            st.info("📊 No date column found. Showing overall metrics.")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Positive", f"{positive_pct:.1f}%")
+            col2.metric("Negative", f"{negative_pct:.1f}%")
+            col3.metric("Neutral", f"{neutral_pct:.1f}%")
         
         st.markdown("---")
         st.subheader("📊 Polarity Distribution")
@@ -496,12 +574,20 @@ def main():
         with col1:
             st.markdown("#### 😊 Most Positive Review")
             positive_reviews = combined_df[combined_df['sentiment'] == 'POSITIVE'].copy()
+            
+            # Exclude false positives
+            exclude_words = ['deleted', 'delete', 'worst', 'never', 'bad', 'terrible', 'horrible']
+            positive_reviews = positive_reviews[
+                ~positive_reviews['text'].str.lower().str.contains('|'.join(exclude_words), na=False)
+            ]
+            
             if len(positive_reviews) > 0:
                 # Get review with highest polarity that's actually positive
                 positive_reviews = positive_reviews[positive_reviews['polarity'] > 0.3]
                 if len(positive_reviews) > 0:
-                    most_positive = positive_reviews.loc[positive_reviews['polarity'].idxmax()]
-                    st.success(f"_{most_positive['text'][:300]}..._")
+                    most_positive = positive_reviews.nlargest(1, 'polarity').iloc[0]
+                    review_text = str(most_positive['text'])[:300]
+                    st.success(f"_{review_text}..._")
                     st.caption(f"📍 Source: {most_positive['source']} | Sentiment Score: {most_positive['polarity']:.3f}")
                 else:
                     st.info("No strongly positive reviews found")
@@ -512,8 +598,9 @@ def main():
             st.markdown("#### 😞 Most Critical Review")
             negative_reviews = combined_df[combined_df['sentiment'] == 'NEGATIVE'].copy()
             if len(negative_reviews) > 0:
-                most_negative = negative_reviews.loc[negative_reviews['polarity'].idxmin()]
-                st.error(f"_{most_negative['text'][:300]}..._")
+                most_negative = negative_reviews.nsmallest(1, 'polarity').iloc[0]
+                review_text = str(most_negative['text'])[:300]
+                st.error(f"_{review_text}..._")
                 st.caption(f"📍 Source: {most_negative['source']} | Sentiment Score: {most_negative['polarity']:.3f}")
             else:
                 st.info("No negative reviews available")
