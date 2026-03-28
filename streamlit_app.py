@@ -38,17 +38,27 @@ def analyze_sentiment(text):
                         'useless', 'waste', 'never', 'disappointed', 'disgusting', 'awful',
                         'poor', 'bad', 'hate', 'scam', 'fraud', 'cheat', 'rude', 'late']
     
-    # Check for strong negative indicators
-    if any(pattern in text_lower for pattern in negative_patterns):
-        blob = TextBlob(str(text))
-        polarity = min(blob.sentiment.polarity, -0.2)  # Force negative
-    else:
-        blob = TextBlob(str(text))
-        polarity = blob.sentiment.polarity
+    # Positive patterns
+    positive_patterns = ['great', 'excellent', 'amazing', 'love', 'best', 'good', 'awesome', 
+                        'fantastic', 'perfect', 'wonderful', 'outstanding', 'superb']
     
-    if polarity > 0.15:
+    # Check for strong indicators
+    has_negative = any(pattern in text_lower for pattern in negative_patterns)
+    has_positive = any(pattern in text_lower for pattern in positive_patterns)
+    
+    blob = TextBlob(str(text))
+    polarity = blob.sentiment.polarity
+    
+    # Adjust polarity based on keywords
+    if has_negative and polarity > -0.3:
+        polarity = min(polarity, -0.2)
+    if has_positive and polarity < 0.3:
+        polarity = max(polarity, 0.2)
+    
+    # Lower thresholds for better classification
+    if polarity > 0.05:
         return 'POSITIVE', polarity
-    elif polarity < -0.15:
+    elif polarity < -0.05:
         return 'NEGATIVE', polarity
     return 'NEUTRAL', polarity
 
