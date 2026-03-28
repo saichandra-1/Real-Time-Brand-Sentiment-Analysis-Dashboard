@@ -253,64 +253,249 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
     
     with tab5:
-        st.subheader(f"💡 Key Insights for {company_name}")
+        st.subheader(f"💡 Strategic Insights for {company_name}")
+        
+        # Sentiment Over Time (if date column exists)
+        st.markdown("### 📈 Sentiment Trend Analysis")
+        date_cols = [col for col in combined_df.columns if 'date' in col.lower() or 'time' in col.lower()]
+        if date_cols:
+            try:
+                combined_df['date_parsed'] = pd.to_datetime(combined_df[date_cols[0]], errors='coerce')
+                trend_df = combined_df.dropna(subset=['date_parsed']).copy()
+                trend_df['date'] = trend_df['date_parsed'].dt.date
+                daily_sentiment = trend_df.groupby(['date', 'sentiment']).size().unstack(fill_value=0)
+                fig = px.line(daily_sentiment, title="Sentiment Trends Over Time")
+                fig.update_layout(xaxis_title="Date", yaxis_title="Count", legend_title="Sentiment")
+                st.plotly_chart(fig, use_container_width=True)
+            except:
+                st.info("📊 Sentiment trend analysis requires valid date information")
+        else:
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Positive Trend", f"{positive_pct:.1f}%", delta=f"+{max(0, positive_pct-33):.1f}%")
+            col2.metric("Negative Trend", f"{negative_pct:.1f}%", delta=f"-{max(0, 33-negative_pct):.1f}%", delta_color="inverse")
+            col3.metric("Sentiment Score", f"{avg_polarity:.3f}", delta=f"{avg_polarity:.3f}")
+        
+        st.markdown("---")
+        
+        # Key Focus Areas
+        st.markdown("### 🎯 Priority Focus Areas")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### 🎯 Strengths")
+            st.markdown("#### 💪 Strengths to Leverage")
             positive_keywords = extract_keywords(combined_df[combined_df['sentiment'] == 'POSITIVE']['text'], top_n=5)
-            for word, count in list(positive_keywords.items())[:5]:
-                st.success(f"✓ **{word.title()}**: {count} mentions")
+            for idx, (word, count) in enumerate(list(positive_keywords.items())[:5], 1):
+                st.success(f"**{idx}. {word.title()}**: {count} positive mentions")
         
         with col2:
-            st.markdown("### ⚠️ Areas for Improvement")
+            st.markdown("#### ⚠️ Critical Issues to Address")
             negative_keywords = extract_keywords(negative_df['text'], top_n=5)
-            for word, count in list(negative_keywords.items())[:5]:
-                st.error(f"✗ **{word.title()}**: {count} complaints")
+            for idx, (word, count) in enumerate(list(negative_keywords.items())[:5], 1):
+                st.error(f"**{idx}. {word.title()}**: {count} complaints")
         
-        st.markdown("### 📋 Actionable Recommendations")
+        st.markdown("---")
         
-        if category_counts.iloc[0] > len(negative_df) * 0.3:
-            top_issue = category_counts.index[0]
-            st.warning(f"🚨 **Priority Alert**: {top_issue} accounts for {category_counts.iloc[0]/len(negative_df)*100:.1f}% of negative feedback")
+        # Actionable Recommendations
+        st.markdown("### 📋 Actionable Recommendations for {company_name}")
+        
+        top_3_issues = category_counts.head(3)
+        
+        for idx, (category, count) in enumerate(top_3_issues.items(), 1):
+            pct = count / len(negative_df) * 100
             
-            if 'delivery' in top_issue.lower():
-                st.info("💡 **Recommendation**: Optimize delivery logistics, partner with more reliable delivery services, implement real-time tracking")
-            elif 'quality' in top_issue.lower():
-                st.info("💡 **Recommendation**: Enhance quality control, partner training programs, temperature-controlled packaging")
-            elif 'service' in top_issue.lower():
-                st.info("💡 **Recommendation**: Customer service training, faster response times, dedicated support team")
-            elif 'price' in top_issue.lower():
-                st.info("💡 **Recommendation**: Review pricing strategy, introduce loyalty programs, transparent pricing")
+            with st.expander(f"🔴 Priority {idx}: {category} ({pct:.1f}% of complaints)", expanded=(idx==1)):
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    if 'delivery' in category.lower():
+                        st.markdown("""
+                        **Immediate Actions:**
+                        - Implement real-time delivery tracking
+                        - Partner with reliable delivery services
+                        - Set realistic delivery time expectations
+                        - Provide compensation for late deliveries
+                        
+                        **Long-term Strategy:**
+                        - Optimize delivery route algorithms
+                        - Increase delivery partner training
+                        - Establish delivery quality metrics
+                        """)
+                    elif 'quality' in category.lower() or 'food' in category.lower():
+                        st.markdown("""
+                        **Immediate Actions:**
+                        - Implement restaurant quality audits
+                        - Temperature-controlled packaging
+                        - Partner quality standards enforcement
+                        - Quick complaint resolution process
+                        
+                        **Long-term Strategy:**
+                        - Restaurant rating system improvements
+                        - Quality certification program
+                        - Customer feedback loop to restaurants
+                        """)
+                    elif 'service' in category.lower():
+                        st.markdown("""
+                        **Immediate Actions:**
+                        - 24/7 customer support availability
+                        - Reduce response time to <2 hours
+                        - Empower support team with refund authority
+                        - Multi-channel support (chat, phone, email)
+                        
+                        **Long-term Strategy:**
+                        - AI-powered chatbot for instant responses
+                        - Customer service training programs
+                        - Proactive issue detection system
+                        """)
+                    elif 'price' in category.lower():
+                        st.markdown("""
+                        **Immediate Actions:**
+                        - Transparent pricing breakdown
+                        - Introduce loyalty rewards program
+                        - First-time user discounts
+                        - Price comparison with competitors
+                        
+                        **Long-term Strategy:**
+                        - Dynamic pricing optimization
+                        - Subscription-based models
+                        - Partner with budget-friendly restaurants
+                        """)
+                    else:
+                        st.markdown("""
+                        **Immediate Actions:**
+                        - Conduct detailed analysis of complaints
+                        - Set up dedicated task force
+                        - Implement quick-win improvements
+                        
+                        **Long-term Strategy:**
+                        - Continuous monitoring and improvement
+                        - Customer feedback integration
+                        """)
+                
+                with col2:
+                    st.metric("Complaints", count)
+                    st.metric("Impact", f"{pct:.1f}%")
+                    st.metric("Priority", f"P{idx}")
         
-        st.markdown("### 📊 Performance Summary")
+        st.markdown("---")
+        
+        # Personalized Response Templates
+        st.markdown("### 💬 Sample Personalized Response Templates")
+        
+        response_templates = {
+            "Delivery Issues": {
+                "template": "Dear Valued Customer,\n\nWe sincerely apologize for the delay in your order delivery. We understand how frustrating this must be. We're taking immediate action to improve our delivery times and have credited ₹{amount} to your account as a goodwill gesture.\n\nYour satisfaction is our priority.\n\nBest regards,\n{company_name} Support Team",
+                "icon": "🚚"
+            },
+            "Food Quality": {
+                "template": "Dear Customer,\n\nWe're sorry to hear about your experience with food quality. This is not the standard we strive for. We've shared your feedback with the restaurant partner and issued a full refund of ₹{amount}.\n\nWe'd love to make it right - please use code QUALITY50 for 50% off your next order.\n\nThank you for helping us improve,\n{company_name} Team",
+                "icon": "🍽️"
+            },
+            "Customer Service": {
+                "template": "Dear {customer_name},\n\nThank you for bringing this to our attention. We apologize for the inconvenience caused. Our team has reviewed your case and we're implementing immediate improvements to our support process.\n\nWe've resolved your issue and added ₹{amount} credits to your account.\n\nWarm regards,\n{company_name} Customer Care",
+                "icon": "💁"
+            },
+            "Pricing Issues": {
+                "template": "Hi {customer_name},\n\nWe appreciate your feedback about pricing. Transparency is important to us. We've reviewed the charges on your order and confirmed [explanation]. As a valued customer, we're offering you a {discount}% discount on your next 3 orders.\n\nThank you for being with us,\n{company_name}",
+                "icon": "💰"
+            },
+            "Technical Issues": {
+                "template": "Hello,\n\nWe're sorry you experienced technical difficulties with our app. Our tech team has been notified and is working on a fix. Meanwhile, we've ensured your order was processed correctly and added ₹{amount} credits for the inconvenience.\n\nThank you for your patience,\n{company_name} Tech Support",
+                "icon": "⚙️"
+            }
+        }
+        
+        for category, details in response_templates.items():
+            with st.expander(f"{details['icon']} {category} Response Template"):
+                st.code(details['template'], language=None)
+                st.caption("💡 Personalize with customer name, order details, and specific compensation amounts")
+        
+        st.markdown("---")
+        
+        # Performance Summary
+        st.markdown("### 📊 Overall Performance Summary")
         
         sentiment_score = (positive_pct - negative_pct) / 100
         
-        if sentiment_score > 0.3:
-            st.success(f"🎉 **Excellent Performance**: {company_name} has strong positive sentiment ({positive_pct:.1f}%)")
-        elif sentiment_score > 0:
-            st.info(f"👍 **Good Performance**: {company_name} has more positive than negative sentiment")
-        else:
-            st.error(f"⚠️ **Needs Attention**: {company_name} has concerning negative sentiment levels ({negative_pct:.1f}%)")
+        col1, col2, col3 = st.columns(3)
         
-        # Sample reviews
-        st.markdown("### 📝 Sample Reviews")
+        with col1:
+            if sentiment_score > 0.3:
+                st.success("🎉 **Excellent Performance**")
+                st.write(f"Strong positive sentiment at {positive_pct:.1f}%")
+            elif sentiment_score > 0:
+                st.info("👍 **Good Performance**")
+                st.write(f"More positive ({positive_pct:.1f}%) than negative")
+            else:
+                st.error("⚠️ **Needs Attention**")
+                st.write(f"High negative sentiment at {negative_pct:.1f}%")
+        
+        with col2:
+            st.metric("Net Sentiment Score", f"{sentiment_score:.2f}")
+            st.caption("Target: >0.30 for excellent performance")
+        
+        with col3:
+            improvement_needed = max(0, 60 - positive_pct)
+            st.metric("To Reach 60% Positive", f"{improvement_needed:.1f}%")
+            st.caption("Industry benchmark for food delivery")
+        
+        st.markdown("---")
+        
+        # Sample Reviews
+        st.markdown("### 📝 Representative Customer Feedback")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("**Most Positive Review**")
+            st.markdown("#### 😊 Most Positive Review")
             most_positive = combined_df.loc[combined_df['polarity'].idxmax()]
-            st.success(f"_{most_positive['text'][:200]}..._")
-            st.caption(f"Source: {most_positive['source']} | Polarity: {most_positive['polarity']:.3f}")
+            st.success(f"_{most_positive['text'][:300]}..._")
+            st.caption(f"📍 Source: {most_positive['source']} | Sentiment Score: {most_positive['polarity']:.3f}")
         
         with col2:
-            st.markdown("**Most Negative Review**")
+            st.markdown("#### 😞 Most Critical Review")
             most_negative = combined_df.loc[combined_df['polarity'].idxmin()]
-            st.error(f"_{most_negative['text'][:200]}..._")
-            st.caption(f"Source: {most_negative['source']} | Polarity: {most_negative['polarity']:.3f}")
+            st.error(f"_{most_negative['text'][:300]}..._")
+            st.caption(f"📍 Source: {most_negative['source']} | Sentiment Score: {most_negative['polarity']:.3f}")
+        
+        st.markdown("---")
+        
+        # Implementation Roadmap
+        st.markdown("### 🗓️ 90-Day Implementation Roadmap")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("#### 📅 Days 1-30: Quick Wins")
+            st.markdown("""
+            - ✅ Set up sentiment monitoring dashboard
+            - ✅ Implement response templates
+            - ✅ Train support team on new protocols
+            - ✅ Launch customer feedback surveys
+            - ✅ Address top 3 complaint categories
+            """)
+        
+        with col2:
+            st.markdown("#### 📅 Days 31-60: Process Improvements")
+            st.markdown("""
+            - 🔄 Optimize delivery logistics
+            - 🔄 Enhance quality control measures
+            - 🔄 Improve app performance
+            - 🔄 Launch loyalty program
+            - 🔄 Partner training initiatives
+            """)
+        
+        with col3:
+            st.markdown("#### 📅 Days 61-90: Long-term Strategy")
+            st.markdown("""
+            - 🎯 Achieve 15% reduction in negative sentiment
+            - 🎯 Increase positive reviews by 20%
+            - 🎯 Reduce complaint response time to <2hrs
+            - 🎯 Launch predictive analytics
+            - 🎯 Establish continuous improvement cycle
+            """)
+        
+        st.success(f"🎯 **Goal**: Achieve 60%+ positive sentiment and <20% negative sentiment within 90 days")
     
     # Download results
     st.markdown("---")
