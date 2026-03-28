@@ -256,24 +256,33 @@ def main():
     with tab4:
         st.subheader("📈 Sentiment Trends & Analysis")
         
-        # Sentiment Over Time
-        date_cols = [col for col in combined_df.columns if 'date' in col.lower() or 'created' in col.lower()]
+        # Sentiment Over Time - check multiple date column names
+        date_cols = [col for col in combined_df.columns if any(x in col.lower() for x in ['date', 'created', 'published', 'time'])]
+        
         if date_cols:
             try:
-                combined_df['date_parsed'] = pd.to_datetime(combined_df[date_cols[0]], errors='coerce')
-                trend_df = combined_df.dropna(subset=['date_parsed']).copy()
+                # Try each date column until one works
+                trend_df = None
+                for date_col in date_cols:
+                    try:
+                        combined_df['date_parsed'] = pd.to_datetime(combined_df[date_col], errors='coerce')
+                        temp_df = combined_df.dropna(subset=['date_parsed']).copy()
+                        if len(temp_df) > 0:
+                            trend_df = temp_df
+                            break
+                    except:
+                        continue
                 
-                if len(trend_df) > 0:
-                    trend_df['date'] = trend_df['date_parsed'].dt.date
+                if trend_df is not None and len(trend_df) > 0:
+                    # Use week for better aggregation
+                    trend_df['date'] = trend_df['date_parsed'].dt.to_period('D').dt.to_timestamp()
                     
-                    # Ensure sentiment column exists and has values
-                    if 'sentiment' not in trend_df.columns or trend_df['sentiment'].isna().all():
-                        st.warning("⚠️ Sentiment data not available for trend analysis")
-                    else:
+                    # Ensure sentiment column exists
+                    if 'sentiment' in trend_df.columns and not trend_df['sentiment'].isna().all():
                         # Daily sentiment counts
                         daily_sentiment = trend_df.groupby(['date', 'sentiment']).size().unstack(fill_value=0)
                         
-                        # Ensure all sentiment types are present
+                        # Ensure all sentiment types exist
                         for sent in ['POSITIVE', 'NEGATIVE', 'NEUTRAL']:
                             if sent not in daily_sentiment.columns:
                                 daily_sentiment[sent] = 0
@@ -373,16 +382,26 @@ def main():
                             )
                             st.plotly_chart(fig2, use_container_width=True)
                         else:
-                            st.info("📊 Need data from multiple dates for trend analysis. Showing overall metrics.")
+                            st.info("📊 All data is from the same date. Showing overall metrics.")
                             col1, col2, col3 = st.columns(3)
                             col1.metric("Positive", f"{positive_pct:.1f}%")
                             col2.metric("Negative", f"{negative_pct:.1f}%")
                             col3.metric("Neutral", f"{neutral_pct:.1f}%")
+                    else:
+                        st.warning("⚠️ Sentiment data not available for trend analysis")
                 else:
-                    st.info("📊 No valid date information for trend analysis.")
+                    st.info("📊 No valid date information found in the data.")
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Positive", f"{positive_pct:.1f}%")
+                    col2.metric("Negative", f"{negative_pct:.1f}%")
+                    col3.metric("Neutral", f"{neutral_pct:.1f}%")
                     
             except Exception as e:
-                st.warning(f"📊 Unable to generate time-based trends: {str(e)}")
+                st.warning(f"📊 Unable to generate time-based trends. Showing overall metrics.")
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Positive", f"{positive_pct:.1f}%")
+                col2.metric("Negative", f"{negative_pct:.1f}%")
+                col3.metric("Neutral", f"{neutral_pct:.1f}%")
         else:
             st.info("📊 No date column found. Showing overall metrics.")
             col1, col2, col3 = st.columns(3)
