@@ -284,8 +284,8 @@ def main():
                         continue
                 
                 if trend_df is not None and len(trend_df) > 0:
-                    # Use week for better aggregation
-                    trend_df['date'] = trend_df['date_parsed'].dt.to_period('D').dt.to_timestamp()
+                    # Convert to date only (remove time component)
+                    trend_df['date'] = pd.to_datetime(trend_df['date_parsed']).dt.date
                     
                     # Ensure sentiment column exists
                     if 'sentiment' in trend_df.columns and not trend_df['sentiment'].isna().all():
@@ -296,6 +296,9 @@ def main():
                         for sent in ['POSITIVE', 'NEGATIVE', 'NEUTRAL']:
                             if sent not in daily_sentiment.columns:
                                 daily_sentiment[sent] = 0
+                        
+                        # Convert index to datetime for proper plotting
+                        daily_sentiment.index = pd.to_datetime(daily_sentiment.index)
                         
                         # Only show if we have multiple dates
                         if len(daily_sentiment) > 1:
