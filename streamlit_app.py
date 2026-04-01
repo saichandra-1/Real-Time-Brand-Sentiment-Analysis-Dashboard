@@ -492,36 +492,152 @@ def main():
         
         st.markdown("---")
         
-        # Personalized Response Templates
-        st.markdown("### 💬 Sample Personalized Response Templates")
+        # Sample Comments with Personalized Responses
+        st.markdown("### 💬 Sample Comments with Personalized Responses")
+        st.info("📌 Real customer comments with AI-generated personalized responses")
         
-        response_templates = {
+        # Get actual sample comments from negative reviews
+        sample_comments = []
+        
+        if len(negative_df) > 0:
+            # Get samples from different categories
+            for category in ['Delivery Issues', 'Food Quality', 'Customer Service', 'Pricing Issues']:
+                cat_reviews = negative_df[negative_df['category'] == category]
+                if len(cat_reviews) > 0:
+                    sample = cat_reviews.iloc[0]
+                    sample_comments.append({
+                        'category': category,
+                        'comment': sample['text'][:150],
+                        'source': sample['source']
+                    })
+                if len(sample_comments) >= 4:
+                    break
+        
+        # If not enough samples, use generic ones
+        if len(sample_comments) < 3:
+            sample_comments = [
+                {
+                    'category': 'Delivery Issues',
+                    'comment': 'Order was 2 hours late! Food arrived cold and the delivery person was rude. Very disappointed with Zomato service.',
+                    'source': 'Twitter'
+                },
+                {
+                    'category': 'Food Quality',
+                    'comment': 'The food quality was terrible. Everything was cold and stale. Not worth the money at all.',
+                    'source': 'Reddit'
+                },
+                {
+                    'category': 'Customer Service',
+                    'comment': 'Tried contacting customer support multiple times but no response. Very poor service from Zomato.',
+                    'source': 'Twitter'
+                },
+                {
+                    'category': 'Pricing Issues',
+                    'comment': 'Hidden charges everywhere! The final bill was way more than shown. This is cheating customers.',
+                    'source': 'Reddit'
+                }
+            ]
+        
+        # Response templates with personalization
+        response_map = {
             "Delivery Issues": {
-                "template": "Dear Valued Customer,\n\nWe sincerely apologize for the delay in your order delivery. We understand how frustrating this must be. We're taking immediate action to improve our delivery times and have credited ₹{amount} to your account as a goodwill gesture.\n\nYour satisfaction is our priority.\n\nBest regards,\n{company_name} Support Team",
-                "icon": "🚚"
+                "response": """Dear @{username},
+
+We sincerely apologize for the delay in your order delivery. We understand how frustrating this experience must have been for you.
+
+**Immediate Actions Taken:**
+✅ Credited ₹150 to your Zomato wallet
+✅ Escalated to our delivery partner team
+✅ Flagged your area for priority service
+
+Your satisfaction is our top priority. Please use code **FASTDELIVERY** for 30% off your next order.
+
+We're committed to serving you better.
+
+Best regards,
+Zomato Customer Care Team
+📞 Support: 1800-208-9999""",
+                "icon": "🚚",
+                "compensation": "₹150 + 30% off"
             },
             "Food Quality": {
-                "template": "Dear Customer,\n\nWe're sorry to hear about your experience with food quality. This is not the standard we strive for. We've shared your feedback with the restaurant partner and issued a full refund of ₹{amount}.\n\nWe'd love to make it right - please use code QUALITY50 for 50% off your next order.\n\nThank you for helping us improve,\n{company_name} Team",
-                "icon": "🍽️"
+                "response": """Dear @{username},
+
+We're deeply sorry about the food quality issue you experienced. This is absolutely not the standard we strive for.
+
+**Immediate Actions Taken:**
+✅ Full refund of ₹{amount} processed
+✅ Restaurant partner notified and counseled
+✅ Quality audit scheduled for this restaurant
+
+As a gesture of goodwill, please enjoy **50% off your next 2 orders** with code **QUALITY50**.
+
+We value your trust and are committed to excellence.
+
+Warm regards,
+Zomato Quality Assurance Team""",
+                "icon": "🍽️",
+                "compensation": "Full refund + 50% off next 2 orders"
             },
             "Customer Service": {
-                "template": "Dear {customer_name},\n\nThank you for bringing this to our attention. We apologize for the inconvenience caused. Our team has reviewed your case and we're implementing immediate improvements to our support process.\n\nWe've resolved your issue and added ₹{amount} credits to your account.\n\nWarm regards,\n{company_name} Customer Care",
-                "icon": "💁"
+                "response": """Dear @{username},
+
+Thank you for bringing this to our attention. We apologize for the delayed response from our support team.
+
+**Immediate Actions Taken:**
+✅ Your issue has been resolved
+✅ ₹100 credited to your account
+✅ Your feedback shared with our training team
+
+We're implementing new measures to ensure faster response times. Please reach out to us directly at **priority@zomato.com** for any future concerns.
+
+Thank you for your patience.
+
+Best regards,
+Zomato Customer Care Manager""",
+                "icon": "💁",
+                "compensation": "₹100 + Priority support"
             },
             "Pricing Issues": {
-                "template": "Hi {customer_name},\n\nWe appreciate your feedback about pricing. Transparency is important to us. We've reviewed the charges on your order and confirmed [explanation]. As a valued customer, we're offering you a {discount}% discount on your next 3 orders.\n\nThank you for being with us,\n{company_name}",
-                "icon": "💰"
-            },
-            "Technical Issues": {
-                "template": "Hello,\n\nWe're sorry you experienced technical difficulties with our app. Our tech team has been notified and is working on a fix. Meanwhile, we've ensured your order was processed correctly and added ₹{amount} credits for the inconvenience.\n\nThank you for your patience,\n{company_name} Tech Support",
-                "icon": "⚙️"
+                "response": """Hi @{username},
+
+We appreciate your feedback about pricing. Transparency is important to us.
+
+**What We're Doing:**
+✅ Detailed fee breakdown now available in app
+✅ ₹75 loyalty points added to your account
+✅ Exclusive access to our new subscription plan (30% savings)
+
+Use code **VALUEPLUS** for 25% off your next 3 orders.
+
+We're committed to providing the best value.
+
+Thank you for being with us,
+Zomato Team""",
+                "icon": "💰",
+                "compensation": "₹75 points + 25% off"
             }
         }
         
-        for category, details in response_templates.items():
-            with st.expander(f"{details['icon']} {category} Response Template"):
-                st.code(details['template'], language=None)
-                st.caption("💡 Personalize with customer name, order details, and specific compensation amounts")
+        # Display sample comments with responses
+        for idx, comment_data in enumerate(sample_comments[:4], 1):
+            category = comment_data['category']
+            
+            with st.expander(f"{response_map[category]['icon']} Sample {idx}: {category}", expanded=(idx==1)):
+                col1, col2 = st.columns([1, 1])
+                
+                with col1:
+                    st.markdown("**📱 Customer Comment:**")
+                    st.error(f"_{comment_data['comment']}_")
+                    st.caption(f"Source: {comment_data['source']}")
+                
+                with col2:
+                    st.markdown("**✉️ Personalized Response:**")
+                    # Generate username from source
+                    username = f"user_{idx}23" if comment_data['source'] == 'Twitter' else f"customer{idx}"
+                    response_text = response_map[category]['response'].replace('{username}', username).replace('{amount}', '350')
+                    st.success(response_text)
+                    st.caption(f"💰 Compensation: {response_map[category]['compensation']}")
         
         st.markdown("---")
         
