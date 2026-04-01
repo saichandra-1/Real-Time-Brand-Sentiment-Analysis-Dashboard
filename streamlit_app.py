@@ -592,32 +592,35 @@ def main():
             for category in ['Delivery Issues', 'Food Quality', 'Customer Service', 'Pricing Issues']:
                 cat_reviews = negative_df[negative_df['category'] == category]
                 if len(cat_reviews) > 0:
-                    sample = cat_reviews.iloc[0]
-                    comment_text = str(sample['text'])[:250]
-                    
-                    # Generate intelligent response
-                    response, compensation = generate_smart_response(comment_text, category)
-                    
-                    # Skip if it's actually positive
-                    if response is None:
-                        continue
-                    
-                    # Icon based on category
-                    icons = {
-                        'Delivery Issues': '🚚',
-                        'Food Quality': '🍽️',
-                        'Customer Service': '💁',
-                        'Pricing Issues': '💰'
-                    }
-                    
-                    sample_pairs.append({
-                        'category': category,
-                        'icon': icons.get(category, '📝'),
-                        'comment': comment_text,
-                        'source': sample['source'],
-                        'response': response,
-                        'compensation': compensation
-                    })
+                    # Try multiple samples to find a good one
+                    for i in range(min(5, len(cat_reviews))):
+                        sample = cat_reviews.iloc[i]
+                        comment_text = str(sample['text'])[:250]
+                        
+                        # Generate intelligent response
+                        response, compensation = generate_smart_response(comment_text, category)
+                        
+                        # Skip if it's actually positive or no response generated
+                        if response is None:
+                            continue
+                        
+                        # Icon based on category
+                        icons = {
+                            'Delivery Issues': '🚚',
+                            'Food Quality': '🍽️',
+                            'Customer Service': '💁',
+                            'Pricing Issues': '💰'
+                        }
+                        
+                        sample_pairs.append({
+                            'category': category,
+                            'icon': icons.get(category, '📝'),
+                            'comment': comment_text,
+                            'source': sample['source'],
+                            'response': response,
+                            'compensation': compensation
+                        })
+                        break  # Found a good sample, move to next category
         
         # Display sample pairs
         if len(sample_pairs) > 0:
