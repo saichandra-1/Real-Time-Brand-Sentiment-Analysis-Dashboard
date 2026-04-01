@@ -410,7 +410,7 @@ def main():
         st.markdown("---")
         
         # Actionable Recommendations
-        st.markdown("### 📋 Actionable Recommendations for {company_name}")
+        st.markdown("### 📋 Actionable Recommendations for Zomato")
         
         top_3_issues = category_counts.head(3)
         
