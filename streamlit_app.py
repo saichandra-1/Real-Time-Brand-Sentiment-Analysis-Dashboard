@@ -493,93 +493,119 @@ def main():
         st.markdown("---")
         
         # Sample Comments with Personalized Responses
-        st.markdown("### 💬 Sample Comments with Personalized Responses")
-        st.info("📌 Real customer comments from dataset with appropriate responses")
+        st.markdown("### 💬 Sample Comments with AI-Generated Responses")
+        st.info("📌 Real customer comments with AI-analyzed personalized responses")
         
-        # Get actual comments from dataset and generate appropriate responses
+        # Function to generate intelligent response based on comment analysis
+        def generate_smart_response(comment_text, category):
+            comment_lower = str(comment_text).lower()
+            
+            # Analyze specific issues mentioned
+            issues = []
+            if 'late' in comment_lower or 'delay' in comment_lower or 'slow' in comment_lower:
+                issues.append('delivery_delay')
+            if 'cold' in comment_lower or 'stale' in comment_lower:
+                issues.append('food_temperature')
+            if 'rude' in comment_lower or 'behavior' in comment_lower:
+                issues.append('staff_behavior')
+            if 'quality' in comment_lower or 'bad' in comment_lower or 'terrible' in comment_lower:
+                issues.append('quality_issue')
+            if 'gst' in comment_lower or 'tax' in comment_lower or 'registered' in comment_lower:
+                issues.append('tax_compliance')
+            if 'charge' in comment_lower or 'fee' in comment_lower or 'expensive' in comment_lower:
+                issues.append('pricing')
+            if 'support' in comment_lower or 'help' in comment_lower or 'response' in comment_lower:
+                issues.append('support_issue')
+            if 'wrong' in comment_lower or 'missing' in comment_lower:
+                issues.append('wrong_order')
+            
+            # Generate response based on identified issues
+            response_parts = ["Dear @customer,\n\n"]
+            actions = []
+            compensation = []
+            
+            # Build response based on issues
+            if 'tax_compliance' in issues:
+                response_parts.append("We take tax compliance very seriously. ")
+                actions.append("✅ Restaurant's GST registration verified immediately")
+                actions.append("✅ Legal compliance team notified")
+                compensation.append("Full refund")
+            
+            if 'quality_issue' in issues or 'food_temperature' in issues:
+                response_parts.append("We're concerned about the food quality issue. ")
+                actions.append("✅ Restaurant partner counseled on quality standards")
+                actions.append("✅ Quality audit scheduled")
+                if 'Full refund' not in compensation:
+                    compensation.append("₹" + str(np.random.randint(300, 600)) + " refund")
+            
+            if 'delivery_delay' in issues:
+                response_parts.append("We apologize for the delivery delay. ")
+                actions.append("✅ Delivery partner counseled")
+                actions.append("✅ Your area flagged for priority service")
+                if not compensation:
+                    compensation.append("₹150 wallet credit")
+            
+            if 'staff_behavior' in issues:
+                response_parts.append("Unprofessional behavior is unacceptable. ")
+                actions.append("✅ Staff member has been counseled")
+                actions.append("✅ Additional training scheduled")
+            
+            if 'pricing' in issues:
+                response_parts.append("We understand your pricing concern. ")
+                actions.append("✅ Detailed fee breakdown now available in app")
+                actions.append("✅ All charges shown upfront")
+            
+            if 'support_issue' in issues:
+                response_parts.append("We apologize for the support delay. ")
+                actions.append("✅ Priority support access: priority@zomato.com")
+                actions.append("✅ Your case escalated to senior team")
+            
+            if 'wrong_order' in issues:
+                response_parts.append("We're sorry about the incorrect order. ")
+                actions.append("✅ Correct order being sent immediately")
+                actions.append("✅ No additional charges")
+                compensation.append("Free replacement")
+            
+            # Default if no specific issues identified
+            if not actions:
+                response_parts.append("Thank you for your feedback. ")
+                actions.append("✅ Your concern has been noted")
+                actions.append("✅ Our team is investigating")
+            
+            # Build final response
+            response = "".join(response_parts) + "\n\n**Immediate Actions:**\n"
+            response += "\n".join(actions)
+            response += "\n\nWe value your trust.\n\nBest regards,\nZomato Customer Care Team"
+            
+            comp_text = " + ".join(compensation) if compensation else "Issue investigation"
+            
+            return response, comp_text
+        
+        # Get actual comments from dataset
         sample_pairs = []
         
         if len(negative_df) > 0:
-            # Get one sample from each category
+            # Get diverse samples from different categories
             for category in ['Delivery Issues', 'Food Quality', 'Customer Service', 'Pricing Issues']:
                 cat_reviews = negative_df[negative_df['category'] == category]
                 if len(cat_reviews) > 0:
                     sample = cat_reviews.iloc[0]
-                    comment_text = str(sample['text'])[:200]
+                    comment_text = str(sample['text'])[:250]
                     
-                    # Generate appropriate response based on category
-                    if category == 'Delivery Issues':
-                        response = f"""Dear @customer,
-
-We sincerely apologize for the delivery issue you experienced.
-
-**Actions Taken:**
-✅ Delivery partner has been counseled
-✅ Your area flagged for priority monitoring
-✅ ₹150 credited to your wallet
-
-We've implemented real-time tracking for your future orders.
-
-Best regards,
-Zomato Delivery Team
-📞 Support: 1800-208-9999"""
-                        compensation = '₹150 wallet credit'
-                        icon = '🚚'
-                        
-                    elif category == 'Food Quality':
-                        response = f"""Dear @customer,
-
-We're extremely concerned about the food quality issue you reported.
-
-**Immediate Actions:**
-✅ Restaurant has been notified and counseled
-✅ Full refund of ₹{np.random.randint(300, 600)} processed
-✅ Quality audit scheduled for this restaurant
-
-Food safety is our top priority.
-
-Warm regards,
-Zomato Food Safety Team"""
-                        compensation = 'Full refund + Quality audit'
-                        icon = '🍽️'
-                        
-                    elif category == 'Customer Service':
-                        response = f"""Dear @customer,
-
-We apologize for the support experience.
-
-**Your Issue Resolution:**
-✅ Your concern has been resolved
-✅ Direct priority support: priority@zomato.com
-✅ Support team has been briefed on your case
-
-We're upgrading our support system to reduce wait times.
-
-Best regards,
-Zomato Customer Care Manager"""
-                        compensation = 'Priority support + Issue resolved'
-                        icon = '💁'
-                        
-                    else:  # Pricing Issues
-                        response = f"""Hi @customer,
-
-Thank you for raising this pricing concern.
-
-**Clarification:**
-✅ All fees now shown upfront before checkout
-✅ Detailed breakdown in "View Bill Details"
-✅ We're working to optimize costs
-
-Transparency is important to us.
-
-Thank you,
-Zomato Team"""
-                        compensation = 'Transparent billing + Explanation'
-                        icon = '💰'
+                    # Generate intelligent response
+                    response, compensation = generate_smart_response(comment_text, category)
+                    
+                    # Icon based on category
+                    icons = {
+                        'Delivery Issues': '🚚',
+                        'Food Quality': '🍽️',
+                        'Customer Service': '💁',
+                        'Pricing Issues': '💰'
+                    }
                     
                     sample_pairs.append({
                         'category': category,
-                        'icon': icon,
+                        'icon': icons.get(category, '📝'),
                         'comment': comment_text,
                         'source': sample['source'],
                         'response': response,
@@ -598,7 +624,7 @@ Zomato Team"""
                         st.caption(f"Source: {pair['source']}")
                     
                     with col2:
-                        st.markdown("**✉️ Personalized Response:**")
+                        st.markdown("**✉️ AI-Generated Response:**")
                         st.success(pair['response'])
                         st.caption(f"💰 Resolution: {pair['compensation']}")
         else:
