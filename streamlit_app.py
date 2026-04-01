@@ -494,115 +494,115 @@ def main():
         
         # Sample Comments with Personalized Responses
         st.markdown("### 💬 Sample Comments with Personalized Responses")
-        st.info("📌 Real customer complaints with specific, problem-focused responses")
+        st.info("📌 Real customer comments from dataset with appropriate responses")
         
-        # Hardcoded matching comment-response pairs with specific solutions
-        sample_pairs = [
-            {
-                'category': 'Delivery Issues',
-                'icon': '🚚',
-                'comment': 'Order was 2 hours late! Food arrived cold and the delivery person was rude. Completely ruined my dinner plans.',
-                'source': 'Twitter',
-                'username': 'user_2341',
-                'response': """Dear @user_2341,
+        # Get actual comments from dataset and generate appropriate responses
+        sample_pairs = []
+        
+        if len(negative_df) > 0:
+            # Get one sample from each category
+            for category in ['Delivery Issues', 'Food Quality', 'Customer Service', 'Pricing Issues']:
+                cat_reviews = negative_df[negative_df['category'] == category]
+                if len(cat_reviews) > 0:
+                    sample = cat_reviews.iloc[0]
+                    comment_text = str(sample['text'])[:200]
+                    
+                    # Generate appropriate response based on category
+                    if category == 'Delivery Issues':
+                        response = f"""Dear @customer,
 
-We sincerely apologize for the late delivery and cold food. This is unacceptable.
+We sincerely apologize for the delivery issue you experienced.
 
 **Actions Taken:**
-✅ Delivery partner has been counseled on professionalism
-✅ Your area flagged for priority delivery monitoring
-✅ ₹150 credited to your wallet for the inconvenience
+✅ Delivery partner has been counseled
+✅ Your area flagged for priority monitoring
+✅ ₹150 credited to your wallet
 
-We've also implemented real-time tracking alerts for your future orders to prevent this.
+We've implemented real-time tracking for your future orders.
 
 Best regards,
 Zomato Delivery Team
-📞 24/7 Support: 1800-208-9999""",
-                'compensation': '₹150 wallet credit'
-            },
-            {
-                'category': 'Food Quality',
-                'icon': '🍽️',
-                'comment': 'The food was stale and had a bad smell. I think the restaurant sent old food. This is a health hazard!',
-                'source': 'Reddit',
-                'username': 'foodlover_89',
-                'response': """Dear @foodlover_89,
+📞 Support: 1800-208-9999"""
+                        compensation = '₹150 wallet credit'
+                        icon = '🚚'
+                        
+                    elif category == 'Food Quality':
+                        response = f"""Dear @customer,
 
-We're extremely concerned about the food quality issue you reported. Food safety is our top priority.
+We're extremely concerned about the food quality issue you reported.
 
 **Immediate Actions:**
-✅ Restaurant has been temporarily suspended pending investigation
-✅ Full refund of ₹450 processed immediately
-✅ Health & safety audit scheduled for this restaurant
+✅ Restaurant has been notified and counseled
+✅ Full refund of ₹{np.random.randint(300, 600)} processed
+✅ Quality audit scheduled for this restaurant
 
-We take food safety very seriously. Our quality team will personally review this restaurant before it's back online.
+Food safety is our top priority.
 
 Warm regards,
-Zomato Food Safety Team""",
-                'compensation': 'Full refund + Restaurant suspended'
-            },
-            {
-                'category': 'Customer Service',
-                'icon': '💁',
-                'comment': 'Called customer care 5 times, no one picked up. Chat support is useless. How do I get help with my wrong order?',
-                'source': 'Twitter',
-                'username': 'angry_customer',
-                'response': """Dear @angry_customer,
+Zomato Food Safety Team"""
+                        compensation = 'Full refund + Quality audit'
+                        icon = '🍽️'
+                        
+                    elif category == 'Customer Service':
+                        response = f"""Dear @customer,
 
-We apologize for the poor support experience. This should not have happened.
+We apologize for the support experience.
 
 **Your Issue Resolution:**
-✅ Wrong order issue resolved - correct items being sent now
-✅ No additional charges for the replacement order
-✅ Direct priority support line: priority@zomato.com
+✅ Your concern has been resolved
+✅ Direct priority support: priority@zomato.com
+✅ Support team has been briefed on your case
 
-We're upgrading our support system to reduce wait times. Your feedback has been escalated to our support head.
+We're upgrading our support system to reduce wait times.
 
 Best regards,
-Zomato Customer Care Manager""",
-                'compensation': 'Free replacement order + Priority support'
-            },
-            {
-                'category': 'Pricing Issues',
-                'icon': '💰',
-                'comment': 'Why is there a ₹50 platform fee suddenly? And ₹30 packaging charge for a single bowl? These hidden charges are ridiculous!',
-                'source': 'Reddit',
-                'username': 'budget_buyer',
-                'response': """Hi @budget_buyer,
+Zomato Customer Care Manager"""
+                        compensation = 'Priority support + Issue resolved'
+                        icon = '💁'
+                        
+                    else:  # Pricing Issues
+                        response = f"""Hi @customer,
 
-Thank you for raising this concern. Let us clarify the charges:
+Thank you for raising this pricing concern.
 
-**Fee Breakdown:**
-• Platform fee (₹50): Helps maintain app infrastructure
-• Packaging charge (₹30): Set by restaurant for eco-friendly packaging
-
-**What We're Doing:**
+**Clarification:**
 ✅ All fees now shown upfront before checkout
-✅ Detailed breakdown available in "View Bill Details"
-✅ We're working with restaurants to optimize packaging costs
+✅ Detailed breakdown in "View Bill Details"
+✅ We're working to optimize costs
 
-We understand pricing transparency is important. Check our app for the new detailed billing section.
+Transparency is important to us.
 
 Thank you,
-Zomato Team""",
-                'compensation': 'Transparent billing + Fee explanation'
-            }
-        ]
+Zomato Team"""
+                        compensation = 'Transparent billing + Explanation'
+                        icon = '💰'
+                    
+                    sample_pairs.append({
+                        'category': category,
+                        'icon': icon,
+                        'comment': comment_text,
+                        'source': sample['source'],
+                        'response': response,
+                        'compensation': compensation
+                    })
         
         # Display sample pairs
-        for idx, pair in enumerate(sample_pairs, 1):
-            with st.expander(f"{pair['icon']} Sample {idx}: {pair['category']}", expanded=(idx==1)):
-                col1, col2 = st.columns([1, 1])
-                
-                with col1:
-                    st.markdown("**📱 Customer Comment:**")
-                    st.error(f"_{pair['comment']}_")
-                    st.caption(f"Source: {pair['source']} | User: @{pair['username']}")
-                
-                with col2:
-                    st.markdown("**✉️ Personalized Response:**")
-                    st.success(pair['response'])
-                    st.caption(f"💰 Resolution: {pair['compensation']}")
+        if len(sample_pairs) > 0:
+            for idx, pair in enumerate(sample_pairs, 1):
+                with st.expander(f"{pair['icon']} Sample {idx}: {pair['category']}", expanded=(idx==1)):
+                    col1, col2 = st.columns([1, 1])
+                    
+                    with col1:
+                        st.markdown("**📱 Customer Comment:**")
+                        st.error(f"_{pair['comment']}_")
+                        st.caption(f"Source: {pair['source']}")
+                    
+                    with col2:
+                        st.markdown("**✉️ Personalized Response:**")
+                        st.success(pair['response'])
+                        st.caption(f"💰 Resolution: {pair['compensation']}")
+        else:
+            st.warning("No negative feedback samples available")
         
         st.markdown("---")
         
