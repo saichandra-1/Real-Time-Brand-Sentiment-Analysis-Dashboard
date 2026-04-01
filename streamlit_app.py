@@ -494,54 +494,17 @@ def main():
         
         # Sample Comments with Personalized Responses
         st.markdown("### 💬 Sample Comments with Personalized Responses")
-        st.info("📌 Real customer comments with AI-generated personalized responses")
+        st.info("📌 Real customer complaints with personalized response examples")
         
-        # Get actual sample comments from negative reviews
-        sample_comments = []
-        
-        if len(negative_df) > 0:
-            # Get samples from different categories
-            for category in ['Delivery Issues', 'Food Quality', 'Customer Service', 'Pricing Issues']:
-                cat_reviews = negative_df[negative_df['category'] == category]
-                if len(cat_reviews) > 0:
-                    sample = cat_reviews.iloc[0]
-                    sample_comments.append({
-                        'category': category,
-                        'comment': sample['text'][:150],
-                        'source': sample['source']
-                    })
-                if len(sample_comments) >= 4:
-                    break
-        
-        # If not enough samples, use generic ones
-        if len(sample_comments) < 3:
-            sample_comments = [
-                {
-                    'category': 'Delivery Issues',
-                    'comment': 'Order was 2 hours late! Food arrived cold and the delivery person was rude. Very disappointed with Zomato service.',
-                    'source': 'Twitter'
-                },
-                {
-                    'category': 'Food Quality',
-                    'comment': 'The food quality was terrible. Everything was cold and stale. Not worth the money at all.',
-                    'source': 'Reddit'
-                },
-                {
-                    'category': 'Customer Service',
-                    'comment': 'Tried contacting customer support multiple times but no response. Very poor service from Zomato.',
-                    'source': 'Twitter'
-                },
-                {
-                    'category': 'Pricing Issues',
-                    'comment': 'Hidden charges everywhere! The final bill was way more than shown. This is cheating customers.',
-                    'source': 'Reddit'
-                }
-            ]
-        
-        # Response templates with personalization
-        response_map = {
-            "Delivery Issues": {
-                "response": """Dear @{username},
+        # Hardcoded matching comment-response pairs
+        sample_pairs = [
+            {
+                'category': 'Delivery Issues',
+                'icon': '🚚',
+                'comment': 'Order was 2 hours late! Food arrived cold and the delivery person was rude. Very disappointed with Zomato service.',
+                'source': 'Twitter',
+                'username': 'user_2341',
+                'response': """Dear @user_2341,
 
 We sincerely apologize for the delay in your order delivery. We understand how frustrating this experience must have been for you.
 
@@ -557,16 +520,20 @@ We're committed to serving you better.
 Best regards,
 Zomato Customer Care Team
 📞 Support: 1800-208-9999""",
-                "icon": "🚚",
-                "compensation": "₹150 + 30% off"
+                'compensation': '₹150 + 30% off'
             },
-            "Food Quality": {
-                "response": """Dear @{username},
+            {
+                'category': 'Food Quality',
+                'icon': '🍽️',
+                'comment': 'The food quality was terrible. Everything was cold and stale. The restaurant sent wrong items. Not worth the money at all.',
+                'source': 'Reddit',
+                'username': 'foodlover_89',
+                'response': """Dear @foodlover_89,
 
 We're deeply sorry about the food quality issue you experienced. This is absolutely not the standard we strive for.
 
 **Immediate Actions Taken:**
-✅ Full refund of ₹{amount} processed
+✅ Full refund of ₹450 processed
 ✅ Restaurant partner notified and counseled
 ✅ Quality audit scheduled for this restaurant
 
@@ -576,11 +543,15 @@ We value your trust and are committed to excellence.
 
 Warm regards,
 Zomato Quality Assurance Team""",
-                "icon": "🍽️",
-                "compensation": "Full refund + 50% off next 2 orders"
+                'compensation': 'Full refund + 50% off next 2 orders'
             },
-            "Customer Service": {
-                "response": """Dear @{username},
+            {
+                'category': 'Customer Service',
+                'icon': '💁',
+                'comment': 'Tried contacting customer support multiple times but no response. My order had issues but nobody helped. Very poor service from Zomato.',
+                'source': 'Twitter',
+                'username': 'angry_customer',
+                'response': """Dear @angry_customer,
 
 Thank you for bringing this to our attention. We apologize for the delayed response from our support team.
 
@@ -595,11 +566,15 @@ Thank you for your patience.
 
 Best regards,
 Zomato Customer Care Manager""",
-                "icon": "💁",
-                "compensation": "₹100 + Priority support"
+                'compensation': '₹100 + Priority support'
             },
-            "Pricing Issues": {
-                "response": """Hi @{username},
+            {
+                'category': 'Pricing Issues',
+                'icon': '💰',
+                'comment': 'Hidden charges everywhere! The final bill was way more than shown in the app. Packaging charges, platform fee, delivery fee - this is cheating customers.',
+                'source': 'Reddit',
+                'username': 'budget_buyer',
+                'response': """Hi @budget_buyer,
 
 We appreciate your feedback about pricing. Transparency is important to us.
 
@@ -614,30 +589,24 @@ We're committed to providing the best value.
 
 Thank you for being with us,
 Zomato Team""",
-                "icon": "💰",
-                "compensation": "₹75 points + 25% off"
+                'compensation': '₹75 points + 25% off'
             }
-        }
+        ]
         
-        # Display sample comments with responses
-        for idx, comment_data in enumerate(sample_comments[:4], 1):
-            category = comment_data['category']
-            
-            with st.expander(f"{response_map[category]['icon']} Sample {idx}: {category}", expanded=(idx==1)):
+        # Display sample pairs
+        for idx, pair in enumerate(sample_pairs, 1):
+            with st.expander(f"{pair['icon']} Sample {idx}: {pair['category']}", expanded=(idx==1)):
                 col1, col2 = st.columns([1, 1])
                 
                 with col1:
                     st.markdown("**📱 Customer Comment:**")
-                    st.error(f"_{comment_data['comment']}_")
-                    st.caption(f"Source: {comment_data['source']}")
+                    st.error(f"_{pair['comment']}_")
+                    st.caption(f"Source: {pair['source']} | User: @{pair['username']}")
                 
                 with col2:
                     st.markdown("**✉️ Personalized Response:**")
-                    # Generate username from source
-                    username = f"user_{idx}23" if comment_data['source'] == 'Twitter' else f"customer{idx}"
-                    response_text = response_map[category]['response'].replace('{username}', username).replace('{amount}', '350')
-                    st.success(response_text)
-                    st.caption(f"💰 Compensation: {response_map[category]['compensation']}")
+                    st.success(pair['response'])
+                    st.caption(f"💰 Compensation: {pair['compensation']}")
         
         st.markdown("---")
         
