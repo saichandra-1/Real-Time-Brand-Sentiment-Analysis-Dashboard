@@ -494,102 +494,98 @@ def main():
         
         # Sample Comments with Personalized Responses
         st.markdown("### 💬 Sample Comments with Personalized Responses")
-        st.info("📌 Real customer complaints with personalized response examples")
+        st.info("📌 Real customer complaints with specific, problem-focused responses")
         
-        # Hardcoded matching comment-response pairs
+        # Hardcoded matching comment-response pairs with specific solutions
         sample_pairs = [
             {
                 'category': 'Delivery Issues',
                 'icon': '🚚',
-                'comment': 'Order was 2 hours late! Food arrived cold and the delivery person was rude. Very disappointed with Zomato service.',
+                'comment': 'Order was 2 hours late! Food arrived cold and the delivery person was rude. Completely ruined my dinner plans.',
                 'source': 'Twitter',
                 'username': 'user_2341',
                 'response': """Dear @user_2341,
 
-We sincerely apologize for the delay in your order delivery. We understand how frustrating this experience must have been for you.
+We sincerely apologize for the late delivery and cold food. This is unacceptable.
 
-**Immediate Actions Taken:**
-✅ Credited ₹150 to your Zomato wallet
-✅ Escalated to our delivery partner team
-✅ Flagged your area for priority service
+**Actions Taken:**
+✅ Delivery partner has been counseled on professionalism
+✅ Your area flagged for priority delivery monitoring
+✅ ₹150 credited to your wallet for the inconvenience
 
-Your satisfaction is our top priority. Please use code **FASTDELIVERY** for 30% off your next order.
-
-We're committed to serving you better.
+We've also implemented real-time tracking alerts for your future orders to prevent this.
 
 Best regards,
-Zomato Customer Care Team
-📞 Support: 1800-208-9999""",
-                'compensation': '₹150 + 30% off'
+Zomato Delivery Team
+📞 24/7 Support: 1800-208-9999""",
+                'compensation': '₹150 wallet credit'
             },
             {
                 'category': 'Food Quality',
                 'icon': '🍽️',
-                'comment': 'The food quality was terrible. Everything was cold and stale. The restaurant sent wrong items. Not worth the money at all.',
+                'comment': 'The food was stale and had a bad smell. I think the restaurant sent old food. This is a health hazard!',
                 'source': 'Reddit',
                 'username': 'foodlover_89',
                 'response': """Dear @foodlover_89,
 
-We're deeply sorry about the food quality issue you experienced. This is absolutely not the standard we strive for.
+We're extremely concerned about the food quality issue you reported. Food safety is our top priority.
 
-**Immediate Actions Taken:**
-✅ Full refund of ₹450 processed
-✅ Restaurant partner notified and counseled
-✅ Quality audit scheduled for this restaurant
+**Immediate Actions:**
+✅ Restaurant has been temporarily suspended pending investigation
+✅ Full refund of ₹450 processed immediately
+✅ Health & safety audit scheduled for this restaurant
 
-As a gesture of goodwill, please enjoy **50% off your next 2 orders** with code **QUALITY50**.
-
-We value your trust and are committed to excellence.
+We take food safety very seriously. Our quality team will personally review this restaurant before it's back online.
 
 Warm regards,
-Zomato Quality Assurance Team""",
-                'compensation': 'Full refund + 50% off next 2 orders'
+Zomato Food Safety Team""",
+                'compensation': 'Full refund + Restaurant suspended'
             },
             {
                 'category': 'Customer Service',
                 'icon': '💁',
-                'comment': 'Tried contacting customer support multiple times but no response. My order had issues but nobody helped. Very poor service from Zomato.',
+                'comment': 'Called customer care 5 times, no one picked up. Chat support is useless. How do I get help with my wrong order?',
                 'source': 'Twitter',
                 'username': 'angry_customer',
                 'response': """Dear @angry_customer,
 
-Thank you for bringing this to our attention. We apologize for the delayed response from our support team.
+We apologize for the poor support experience. This should not have happened.
 
-**Immediate Actions Taken:**
-✅ Your issue has been resolved
-✅ ₹100 credited to your account
-✅ Your feedback shared with our training team
+**Your Issue Resolution:**
+✅ Wrong order issue resolved - correct items being sent now
+✅ No additional charges for the replacement order
+✅ Direct priority support line: priority@zomato.com
 
-We're implementing new measures to ensure faster response times. Please reach out to us directly at **priority@zomato.com** for any future concerns.
-
-Thank you for your patience.
+We're upgrading our support system to reduce wait times. Your feedback has been escalated to our support head.
 
 Best regards,
 Zomato Customer Care Manager""",
-                'compensation': '₹100 + Priority support'
+                'compensation': 'Free replacement order + Priority support'
             },
             {
                 'category': 'Pricing Issues',
                 'icon': '💰',
-                'comment': 'Hidden charges everywhere! The final bill was way more than shown in the app. Packaging charges, platform fee, delivery fee - this is cheating customers.',
+                'comment': 'Why is there a ₹50 platform fee suddenly? And ₹30 packaging charge for a single bowl? These hidden charges are ridiculous!',
                 'source': 'Reddit',
                 'username': 'budget_buyer',
                 'response': """Hi @budget_buyer,
 
-We appreciate your feedback about pricing. Transparency is important to us.
+Thank you for raising this concern. Let us clarify the charges:
+
+**Fee Breakdown:**
+• Platform fee (₹50): Helps maintain app infrastructure
+• Packaging charge (₹30): Set by restaurant for eco-friendly packaging
 
 **What We're Doing:**
-✅ Detailed fee breakdown now available in app
-✅ ₹75 loyalty points added to your account
-✅ Exclusive access to our new subscription plan (30% savings)
+✅ All fees now shown upfront before checkout
+✅ Detailed breakdown available in "View Bill Details"
+✅ We're working with restaurants to optimize packaging costs
 
-Use code **VALUEPLUS** for 25% off your next 3 orders.
+We understand pricing transparency is important. Check our app for the new detailed billing section.
 
-We're committed to providing the best value.
-
-Thank you for being with us,
+Thank you,
 Zomato Team""",
-                'compensation': '₹75 points + 25% off'
+                'compensation': 'Transparent billing + Fee explanation'
             }
         ]
         
@@ -606,7 +602,7 @@ Zomato Team""",
                 with col2:
                     st.markdown("**✉️ Personalized Response:**")
                     st.success(pair['response'])
-                    st.caption(f"💰 Compensation: {pair['compensation']}")
+                    st.caption(f"💰 Resolution: {pair['compensation']}")
         
         st.markdown("---")
         
