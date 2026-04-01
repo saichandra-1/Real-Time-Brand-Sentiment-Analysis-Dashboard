@@ -500,88 +500,91 @@ def main():
         def generate_smart_response(comment_text, category):
             comment_lower = str(comment_text).lower()
             
-            # Analyze specific issues mentioned
-            issues = []
-            if 'late' in comment_lower or 'delay' in comment_lower or 'slow' in comment_lower:
-                issues.append('delivery_delay')
-            if 'cold' in comment_lower or 'stale' in comment_lower:
-                issues.append('food_temperature')
-            if 'rude' in comment_lower or 'behavior' in comment_lower:
-                issues.append('staff_behavior')
-            if 'quality' in comment_lower or 'bad' in comment_lower or 'terrible' in comment_lower:
-                issues.append('quality_issue')
-            if 'gst' in comment_lower or 'tax' in comment_lower or 'registered' in comment_lower:
-                issues.append('tax_compliance')
-            if 'charge' in comment_lower or 'fee' in comment_lower or 'expensive' in comment_lower:
-                issues.append('pricing')
-            if 'support' in comment_lower or 'help' in comment_lower or 'response' in comment_lower:
-                issues.append('support_issue')
-            if 'wrong' in comment_lower or 'missing' in comment_lower:
-                issues.append('wrong_order')
+            # First check if it's actually positive (misclassified)
+            positive_indicators = ['thank', 'great', 'excellent', 'amazing', 'love', 'good', 'kudos', 'made my', 'delivered', 'happy']
+            if any(word in comment_lower for word in positive_indicators) and 'bad' not in comment_lower and 'horrible' not in comment_lower:
+                # This is positive, skip it
+                return None, None
             
-            # Generate response based on identified issues
+            # Analyze specific issues with better logic
             response_parts = ["Dear @customer,\n\n"]
             actions = []
             compensation = []
             
-            # Build response based on issues
-            if 'tax_compliance' in issues:
-                response_parts.append("We take tax compliance very seriously. ")
-                actions.append("✅ Restaurant's GST registration verified immediately")
-                actions.append("✅ Legal compliance team notified")
-                compensation.append("Full refund")
+            # Check for missing/wrong order (highest priority)
+            if 'missing' in comment_lower or 'half' in comment_lower and 'order' in comment_lower:
+                response_parts.append("We sincerely apologize for the missing items in your order. This is unacceptable. ")
+                actions.append("✅ Complete order being sent immediately at no extra cost")
+                actions.append("✅ Full refund for missing items processed")
+                actions.append("✅ Restaurant partner has been notified")
+                compensation.append("Full refund + Free replacement")
             
-            if 'quality_issue' in issues or 'food_temperature' in issues:
-                response_parts.append("We're concerned about the food quality issue. ")
+            # Check for support issues
+            elif 'no support' in comment_lower or 'no proper support' in comment_lower or ('support' in comment_lower and ('no' in comment_lower or 'poor' in comment_lower)):
+                response_parts.append("We apologize for the poor support experience. ")
+                actions.append("✅ Your issue is now being handled by our senior team")
+                actions.append("✅ Direct priority support: priority@zomato.com")
+                actions.append("✅ ₹100 credited to your account for the inconvenience")
+                compensation.append("₹100 credit + Priority support")
+            
+            # Check for packaging/pricing charges
+            elif 'packaging charge' in comment_lower or 'absurd amount' in comment_lower or ('charge' in comment_lower and 'packaging' in comment_lower):
+                response_parts.append("We understand your concern about packaging charges. ")
+                actions.append("✅ Packaging charges are set by restaurant partners for eco-friendly materials")
+                actions.append("✅ We're working with partners to optimize these costs")
+                actions.append("✅ Detailed fee breakdown now available before checkout")
+                compensation.append("Transparent billing")
+            
+            # Check for GST/tax issues
+            elif 'gst' in comment_lower or ('tax' in comment_lower and 'registered' in comment_lower):
+                response_parts.append("We take tax compliance very seriously. ")
+                actions.append("✅ Restaurant's GST registration being verified immediately")
+                actions.append("✅ Legal compliance team has been notified")
+                actions.append("✅ Full refund processed")
+                compensation.append("Full refund + Compliance check")
+            
+            # Check for food quality
+            elif 'quality' in comment_lower and 'bad' in comment_lower or 'stale' in comment_lower or 'smell' in comment_lower:
+                response_parts.append("We're concerned about the food quality issue you reported. ")
                 actions.append("✅ Restaurant partner counseled on quality standards")
                 actions.append("✅ Quality audit scheduled")
-                if 'Full refund' not in compensation:
-                    compensation.append("₹" + str(np.random.randint(300, 600)) + " refund")
+                actions.append("✅ Full refund of ₹" + str(np.random.randint(300, 600)) + " processed")
+                compensation.append("Full refund + Quality audit")
             
-            if 'delivery_delay' in issues:
+            # Check for delivery delay
+            elif 'late' in comment_lower or 'delay' in comment_lower or 'slow' in comment_lower:
                 response_parts.append("We apologize for the delivery delay. ")
-                actions.append("✅ Delivery partner counseled")
+                actions.append("✅ Delivery partner has been counseled")
                 actions.append("✅ Your area flagged for priority service")
-                if not compensation:
-                    compensation.append("₹150 wallet credit")
+                actions.append("✅ ₹150 credited to your wallet")
+                compensation.append("₹150 wallet credit")
             
-            if 'staff_behavior' in issues:
-                response_parts.append("Unprofessional behavior is unacceptable. ")
-                actions.append("✅ Staff member has been counseled")
-                actions.append("✅ Additional training scheduled")
+            # Check for cold food
+            elif 'cold' in comment_lower and 'food' in comment_lower:
+                response_parts.append("We're sorry the food arrived cold. ")
+                actions.append("✅ Restaurant partner reminded about proper packaging")
+                actions.append("✅ Delivery time optimization for your area")
+                actions.append("✅ ₹100 credited to your account")
+                compensation.append("₹100 credit")
             
-            if 'pricing' in issues:
-                response_parts.append("We understand your pricing concern. ")
-                actions.append("✅ Detailed fee breakdown now available in app")
-                actions.append("✅ All charges shown upfront")
-            
-            if 'support_issue' in issues:
-                response_parts.append("We apologize for the support delay. ")
-                actions.append("✅ Priority support access: priority@zomato.com")
-                actions.append("✅ Your case escalated to senior team")
-            
-            if 'wrong_order' in issues:
-                response_parts.append("We're sorry about the incorrect order. ")
-                actions.append("✅ Correct order being sent immediately")
-                actions.append("✅ No additional charges")
-                compensation.append("Free replacement")
-            
-            # Default if no specific issues identified
-            if not actions:
-                response_parts.append("Thank you for your feedback. ")
-                actions.append("✅ Your concern has been noted")
-                actions.append("✅ Our team is investigating")
+            # Default for other issues
+            else:
+                response_parts.append("Thank you for bringing this to our attention. ")
+                actions.append("✅ Your feedback has been escalated to the relevant team")
+                actions.append("✅ We're investigating this matter")
+                actions.append("✅ You'll receive an update within 24 hours")
+                compensation.append("Under investigation")
             
             # Build final response
             response = "".join(response_parts) + "\n\n**Immediate Actions:**\n"
             response += "\n".join(actions)
             response += "\n\nWe value your trust.\n\nBest regards,\nZomato Customer Care Team"
             
-            comp_text = " + ".join(compensation) if compensation else "Issue investigation"
+            comp_text = compensation[0] if compensation else "Issue investigation"
             
             return response, comp_text
         
-        # Get actual comments from dataset
+        # Get actual comments from dataset (only negative ones)
         sample_pairs = []
         
         if len(negative_df) > 0:
@@ -594,6 +597,10 @@ def main():
                     
                     # Generate intelligent response
                     response, compensation = generate_smart_response(comment_text, category)
+                    
+                    # Skip if it's actually positive
+                    if response is None:
+                        continue
                     
                     # Icon based on category
                     icons = {
