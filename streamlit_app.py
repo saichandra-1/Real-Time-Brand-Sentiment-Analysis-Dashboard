@@ -25,7 +25,6 @@ def load_sentiment_model():
                                       max_length=512, truncation=True)
         return sentiment_pipeline
     except Exception as e:
-        st.warning(f"Using fallback TextBlob model: {str(e)}")
         return None
 
 # Initialize model
@@ -451,8 +450,7 @@ def main():
                 ("Packaging Quality", 3)
             ]
             for strength, count in strengths:
-                bar = "█" * (count // 2)
-                st.success(f"**{strength}** {bar} ({count})")
+                st.success(f"**{strength}**: ({count})")
         
         with col2:
             st.markdown("#### ⚠️ Critical Issues to Address")
@@ -467,8 +465,7 @@ def main():
                 ("Rude Staff", 6)
             ]
             for issue, count in issues:
-                bar = "█" * (count // 3)
-                st.error(f"**{issue}** {bar} ({count})")
+                st.error(f"**{issue}**: ({count})")
         
         st.markdown("---")
         
